@@ -83,15 +83,6 @@ This directory contains adapters and abstraction layers for interactions with al
 This directory contains the operational behavior of the domain. This directory is responsible for and facilitates the execution of the logic within the domain.
 
 
-# TLab API Documentation
-
-## Collection Overview
-Postman collection for TLab API endpoints. Base URL is configured using `{{host}}` variable.
-
-## Authentication
-Most endpoints require Bearer token authentication. The token is automatically captured from the Login response and stored in the `{{access_token}}` variable.
-
-
 ## Endpoints
 ---
 You can check list of endpoint on the Postman
