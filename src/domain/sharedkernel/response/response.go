@@ -48,6 +48,13 @@ func BadRequest(c echo.Context, message string, err error) error {
 	return Error(c, http.StatusBadRequest, message, err)
 }
 
+func Unauthorized(c echo.Context, message string) error {
+	return c.JSON(http.StatusUnauthorized, Response{
+		Status:  "error",
+		Message: message,
+	})
+}
+
 func Ok(c echo.Context, message string, data any) error {
 	return Success(c, http.StatusOK, message, data)
 }

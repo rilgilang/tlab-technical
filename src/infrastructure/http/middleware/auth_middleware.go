@@ -1,14 +1,14 @@
 package middleware
 
 import (
-	"net/http"
-	"strings"
-	"tlab/bootstrap/config"
-	"tlab/bootstrap/container"
-
+	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/sarulabs/di/v2"
+	"strings"
+	"tlab/bootstrap/config"
+	"tlab/bootstrap/container"
+	"tlab/src/domain/sharedkernel/response"
 )
 
 func AuthenticationMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -20,11 +20,11 @@ func AuthenticationMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		authHeader := c.Request().Header.Get("Authorization")
 		if authHeader == "" {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Missing Authorization header")
+			return response.Unauthorized(c, "missing authorization header")
 		}
 
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid Authorization header format")
+			return response.Unauthorized(c, "Invalid Authorization header format")
 		}
 
 		tokenString := strings.TrimSpace(strings.Replace(authHeader, "Bearer", "", 1))
@@ -34,21 +34,21 @@ func AuthenticationMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		})
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token")
+			return response.Unauthorized(c, "invalid token")
 		}
 
 		if !token.Valid {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Token is not valid")
+			return response.Unauthorized(c, "token is not valid")
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Error extracting claims")
+			return response.DisplayCustomError(c, errors.New("server_error"))
 		}
 
 		userID, ok := claims["id"].(string)
 		if !ok {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Error extracting user ID from claims")
+			return response.DisplayCustomError(c, errors.New("server_error"))
 		}
 		c.Set("user_id", userID)
 
