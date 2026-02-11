@@ -1,0 +1,11 @@
+development:
+  dialect: postgres
+  datasource: dbname=tlab sslmode=disable
+  dir: ./bootstrap/database/migration
+  table: migration
+
+production:
+  dialect: postgres
+  datasource: dbname=tlab sslmode=disable
+  dir: ./bootstrap/database/migration
+  table: migration

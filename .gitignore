@@ -1,0 +1,52 @@
+# Go build outputs
+/gus
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+coverage.out
+
+# Build and package dirs
+/bin/
+/src/infrastructure/pkg/
+/out/
+dist/
+
+# Vendor (remove if you commit vendor/)
+vendor/
+
+# Go tool cache / modules (usually outside repo, but safe)
+*.a
+*.o
+
+# IDEs and editors
+.vscode/
+.idea/
+*.iml
+*.sublime-*
+*.code-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment, logs, temp
+.env
+.env.local
+*.log
+*.tmp
+*.cache
+
+# Node (if present)
+node_modules/
+
+# Misc generated files
+*.prof
+*.cover
+*.coverprofile
+
+
+deployment/rabbitmq/data
+deployment/docker/redis

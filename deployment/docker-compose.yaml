@@ -1,0 +1,36 @@
+version: '3.7'
+
+services:
+  tlab:
+    build:
+      context: ../
+      dockerfile: ./deployment/Dockerfile
+    working_dir: /go/src/gus-payment-be
+    container_name: tlab
+    hostname: tlab
+    env_file: ../.env
+    networks:
+      - code-network
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    depends_on:
+      - postgresql
+
+  postgresql:
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    build:
+      context: ./db
+#    volumes:
+#      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${DB_PORT}:5432"
+    command: ["postgres", "-c", "log_statement=all"]
+    networks:
+      - code-network
+
+networks:
+  code-network:
+    driver: bridge
