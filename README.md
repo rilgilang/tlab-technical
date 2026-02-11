@@ -95,3 +95,4 @@ Most endpoints require Bearer token authentication. The token is automatically c
 ## Endpoints
 ---
 You can check list of endpoint on the Postman
+https://blue-moon-221631.postman.co/workspace/My-Workspace~7ab23d94-3d8d-46f2-8be3-c4f74dcf0d25/collection/29535426-6aa0b350-f8e9-49a7-8ef8-4b0bf104797b?action=share&creator=29535426
