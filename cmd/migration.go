@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"tlab/bootstrap/container"
 
 	"github.com/jmoiron/sqlx"
@@ -35,6 +36,7 @@ func Migration(ctn *di.Container) []*cli.Command {
 				Name:  "down",
 				Usage: "down known migration",
 				Action: func(context.Context, *cli.Command) error {
+					fmt.Println("down")
 					migrations := &migrate.FileMigrationSource{
 						Dir: "./bootstrap/database/migration",
 					}

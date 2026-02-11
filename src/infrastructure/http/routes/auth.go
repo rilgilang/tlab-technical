@@ -30,7 +30,7 @@ func Login(c echo.Context) error {
 		return response.Error(c, 500, "internal server error", nil)
 	}
 
-	return response.Ok(c, "successfully charge", token)
+	return response.Ok(c, "successfully login", token)
 }
 
 func Register(c echo.Context) error {
@@ -59,9 +59,9 @@ func Register(c echo.Context) error {
 
 func AuthRoutes(api *echo.Group, ctn *di.Container) *echo.Group {
 
-	trx := api.Group("/auth")
-	trx.POST("/login", Login)
-	trx.POST("/register", Register)
+	auth := api.Group("/auth")
+	auth.POST("/login", Login)
+	auth.POST("/register", Register)
 
-	return trx
+	return auth
 }

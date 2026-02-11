@@ -22,5 +22,7 @@ func SetupRoutes(
 
 	//public routes
 	routes.AuthRoutes(api, container)
+	routes.UserRoutes(api, container)
 	routes.TransactionRoutes(api, container)
+	routes.WalletRoutes(api, container)
 }

@@ -50,7 +50,6 @@ func AuthenticationMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		if !ok {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Error extracting user ID from claims")
 		}
-
 		c.Set("user_id", userID)
 
 		// Continue to the next handler

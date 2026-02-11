@@ -93,3 +93,37 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*use
 	}
 	return user, nil
 }
+
+func (r *UserRepository) GetUserById(ctx context.Context, id string) (*user.User, error) {
+
+	query := `
+		SELECT
+		                          id, 
+		                          name, 
+		                          email,
+		                          password, 
+		                          created_at, 
+		                          updated_at
+		FROM "user"
+		WHERE id = $1
+		`
+
+	user := &user.User{}
+
+	err := r.DB.QueryRowxContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.Password,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		r.log.Error("error_get_user_by_email", err)
+		return nil, err
+	}
+	return user, nil
+}

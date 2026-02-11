@@ -13,7 +13,7 @@ import (
 func NewApplication() *[]di.Def {
 	return &[]di.Def{
 		{
-			Name: WalletRepositoryDefName,
+			Name: WalletApplicationDefName,
 			Build: func(ctn di.Container) (interface{}, error) {
 				walletRepo := ctn.Get(WalletRepositoryDefName).(*repositories.WalletRepository)
 				transactionLogRepo := ctn.Get(TransactionLogRepositoryDefName).(*repositories.TransactionLogRepository)
@@ -27,10 +27,11 @@ func NewApplication() *[]di.Def {
 			Name: UserApplicationDefName,
 			Build: func(ctn di.Container) (interface{}, error) {
 				userRepo := ctn.Get(UserRepositoryDefName).(*repositories.UserRepository)
+				walletRepo := ctn.Get(WalletRepositoryDefName).(*repositories.WalletRepository)
 				log := ctn.Get(LoggerDefName).(logger.Logger)
 				uow := ctn.Get(UnitOfWorkDefName).(unitofwork.UnitOfWork)
 				jwtMiddleware := ctn.Get(JWTDefName).(jwt.JWT)
-				return application.NewUser(uow, jwtMiddleware, log, userRepo), nil
+				return application.NewUser(uow, jwtMiddleware, log, userRepo, walletRepo), nil
 			},
 		},
 	}

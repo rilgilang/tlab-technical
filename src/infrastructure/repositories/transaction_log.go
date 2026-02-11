@@ -2,89 +2,152 @@ package repositories
 
 import (
 	"context"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
-	"time"
+	"tlab/src/domain/sharedkernel/logger"
 	"tlab/src/domain/wallet"
 )
 
 type TransactionLogRepository struct {
-	DB *sqlx.DB
+	DB  *sqlx.DB
+	log logger.Logger
 }
 
-func NewTransactionLogRepository(db *sqlx.DB) *TransactionLogRepository {
+func NewTransactionLogRepository(db *sqlx.DB, log logger.Logger) *TransactionLogRepository {
 	return &TransactionLogRepository{
-		DB: db,
+		DB:  db,
+		log: log,
 	}
 }
 
 func (r *TransactionLogRepository) CreateTransactionLog(ctx context.Context, payload wallet.TransactionLog) error {
 
-	query := `
-		INSERT INTO trx_log (
-		                          id, 
-		                          trx_id, 
-		                          payment_gateway_payload,
-		                          payment_gateway_response, 
-		                          info_level,
-		                     	  payload, 
-		                          payment_gateway_callback_payload, 
-		                          created_at, 
-		                          updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		`
+	q := sq.Insert("trx_log").
+		Columns(
+			"id",
+			"sender",
+			"receiver",
+			"amount",
+			"status",
+			"reason",
+			"created_at",
+			"updated_at").
+		Values(
+			&payload.ID,
+			&payload.Sender,
+			&payload.Receiver,
+			&payload.Amount,
+			&payload.Status,
+			&payload.Reason,
+			&payload.CreatedAt,
+			&payload.UpdatedAt,
+		)
 
-	vals := []interface{}{
-		payload.ID,
-		payload.TrxID,
-		payload.PaymentGatewayPayload,
-		payload.PaymentGatewayResponse,
-		payload.InfoLevel,
-		payload.RequestPayload,
-		"{}",
-		payload.CreatedAt,
-		payload.UpdatedAt,
+	q = q.PlaceholderFormat(sq.Dollar)
+
+	sql, i, err := q.ToSql()
+	if err != nil {
+		r.log.Error("error_create_trx_log", err)
+		return err
 	}
 
-	stmt, err := GenerateStatement(ctx, r.DB, query)
+	stmt, err := GenerateStatement(ctx, r.DB, sql)
 	if err != nil {
+		r.log.Error("error_create_trx_log", err)
 		return err
 	}
 
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(ctx, vals...)
+	_, err = stmt.ExecContext(ctx, i...)
 	if err != nil {
+		r.log.Error("error_create_trx_log", err)
 		return err
 	}
 
 	return nil
 }
 
-func (r *TransactionLogRepository) UpdateCallbackTransactionLog(ctx context.Context, callbackPayload []byte, trxId wallet.TrxID) error {
+func (r *TransactionLogRepository) GetTransactionHistory(
+	ctx context.Context,
+	walletID string,
+) ([]wallet.DetailedTransactionLog, error) {
 
-	query := `
-		UPDATE  trx_log SET
-			payment_gateway_callback_payload = $1, 
-			updated_at = $2
-		WHERE trx_id = $3
-		`
+	// Convert string walletID to UUID format
+	q := sq.Select(
+		"t.id",
+		"t.sender",
+		"su.name AS sender_name",
+		"t.receiver",
+		"ru.name AS receiver_name",
+		"t.amount",
+		"t.status",
+		"t.reason",
+		"t.created_at",
+		"t.updated_at",
+	).
+		From("trx_log t").
+		Join("wallet sw ON sw.id = t.sender").
+		Join(`"user" su ON su.id = sw.user_id`).
+		Join("wallet rw ON rw.id = t.receiver").
+		Join(`"user" ru ON ru.id = rw.user_id`).
+		Where(
+			// Use ::uuid cast to explicitly convert the string to UUID
+			sq.Expr("(t.sender = ?::uuid OR t.receiver = ?::uuid)", walletID, walletID),
+		).
+		OrderBy("t.created_at DESC")
 
-	vals := []interface{}{
-		callbackPayload,
-		time.Now(),
-		trxId,
-	}
+	q = q.PlaceholderFormat(sq.Dollar)
 
-	stmt, err := GenerateStatement(ctx, r.DB, query)
+	sqlString, args, err := q.ToSql()
 	if err != nil {
-		return err
+		r.log.Error("error_get_trx_history", err)
+		return nil, err
 	}
 
+	stmt, err := GenerateStatement(ctx, r.DB, sqlString)
+	if err != nil {
+		r.log.Error("error_get_trx_history", err)
+		return nil, err
+	}
 	defer stmt.Close()
 
-	if _, err = stmt.ExecContext(ctx, vals...); err != nil {
-		return nil
+	rows, err := stmt.QueryContext(ctx, args...)
+	if err != nil {
+		r.log.Error("error_get_trx_history_query", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var logs []wallet.DetailedTransactionLog
+
+	for rows.Next() {
+		var log wallet.DetailedTransactionLog
+
+		err := rows.Scan(
+			&log.ID,
+			&log.Sender,
+			&log.SenderName,
+			&log.Receiver,
+			&log.ReceiverName,
+			&log.Amount,
+			&log.Status,
+			&log.Reason,
+			&log.CreatedAt,
+			&log.UpdatedAt,
+		)
+		if err != nil {
+			r.log.Error("error_get_trx_history_scan", err)
+			return nil, err
+		}
+
+		logs = append(logs, log)
 	}
 
-	return nil
+	if err = rows.Err(); err != nil {
+		r.log.Error("error_get_trx_history_rows", err)
+		return nil, err
+	}
+
+	return logs, nil
 }

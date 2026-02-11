@@ -4,42 +4,39 @@ import (
 	"context"
 	"time"
 	errorDomain "tlab/src/domain/error"
-	"tlab/src/domain/sharedkernel/constants"
 	"tlab/src/domain/sharedkernel/jwt"
 
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
-	ID        uuid.UUID      `json:"id"`
-	Name      string         `json:"name"`
-	Email     string         `json:"email"`
-	Password  string         `json:"password"`
-	Role      constants.Role `json:"role"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-}
+type (
+	UserId string
+	User   struct {
+		ID        string    `json:"id"`
+		Name      string    `json:"name"`
+		Email     string    `json:"email"`
+		Password  string    `json:"password"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+	}
 
-// DTO: Register input
-type RegisterInput struct {
-	Name     string `json:"name" validate:"required,min=2,max=50"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6"`
-}
+	RegisterInput struct {
+		Name     string `json:"name" validate:"required,min=2,max=50"`
+		Email    string `json:"email" validate:"required,email"`
+		Password string `json:"password" validate:"required,min=6"`
+	}
 
-// DTO: Login input
-type LoginInput struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
-}
+	LoginInput struct {
+		Email    string `json:"email" validate:"required,email"`
+		Password string `json:"password" validate:"required"`
+	}
 
-type JWTToken struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
+	JWTToken struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	}
+)
 
-// Factory: Create new user from register input
 func (u *User) NewUser(ctx context.Context, repository UserRepository) error {
 	if err := repository.CreateUser(ctx, *u); err != nil {
 		return err
@@ -47,18 +44,12 @@ func (u *User) NewUser(ctx context.Context, repository UserRepository) error {
 	return nil
 }
 
-// Password setter with hashing
-func (u *User) SetPassword() error {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), constants.BcryptCost)
-	if err != nil {
-		return err
-	}
-	u.Password = string(hashedPassword)
-	return nil
-}
-
 func (u *LoginInput) GetUser(ctx context.Context, repository UserRepository) (*User, error) {
 	return repository.GetUserByEmail(ctx, u.Email)
+}
+
+func (u *UserId) GetUser(ctx context.Context, repository UserRepository) (*User, error) {
+	return repository.GetUserById(ctx, string(*u))
 }
 
 func (u *User) CheckPassword(password string) error {
@@ -91,7 +82,7 @@ func (u *User) GenerateSalt() ([]byte, error) {
 }
 
 func (u *User) GenerateJWTToken(ctx context.Context, jwt jwt.JWT) (*JWTToken, error) {
-	accessToken, err := jwt.GenerateAccessToken(ctx, u.ID.String())
+	accessToken, err := jwt.GenerateAccessToken(ctx, u.ID)
 
 	if err != nil {
 		return nil, err

@@ -1,11 +1,27 @@
-package wallet
+package dto
 
-import (
-	"context"
-	"time"
-)
+import "time"
 
 type (
+	Transfer struct {
+		WalletID string `json:"wallet_id" validate:"required"`
+		Amount   int64  `json:"amount" validate:"required,gt=0"`
+	}
+
+	TopUp struct {
+		Amount int64 `json:"amount" validate:"required,gt=0"`
+	}
+
+	TopUpResponse struct {
+		Amount  int64 `json:"amount"`
+		Balance int64 `json:"balance"`
+	}
+
+	BalanceResponse struct {
+		WalletId string `json:"wallet_id"`
+		Balance  int64  `json:"balance"`
+	}
+
 	DetailedTransactionLog struct {
 		ID           string    `json:"id,omitempty"`
 		Sender       string    `json:"sender,omitempty"`
@@ -29,12 +45,9 @@ type (
 		CreatedAt time.Time `json:"created_at,omitempty"`
 		UpdatedAt time.Time `json:"updated_at,omitempty"`
 	}
+
+	TransferResponse struct {
+		WalletID          string `json:"wallet_id"`
+		TransferredAmount int64  `json:"transferred_amount"`
+	}
 )
-
-func (l *TransactionLog) SaveLog(ctx context.Context, repository TransactionLogRepository) error {
-	return repository.CreateTransactionLog(ctx, *l)
-}
-
-func (l *WalletId) TransactionList(ctx context.Context, repository TransactionLogRepository) ([]DetailedTransactionLog, error) {
-	return repository.GetTransactionHistory(ctx, string(*l))
-}

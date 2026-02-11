@@ -2,7 +2,7 @@
 CREATE TABLE wallet (
                         id UUID PRIMARY KEY,
                         user_id UUID NOT NULL,
-                        amount int NOT NULL,
+                        amount bigint NOT NULL,
                         created_at TIMESTAMP,
                         updated_at TIMESTAMP
 );

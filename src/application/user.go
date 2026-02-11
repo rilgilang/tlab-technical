@@ -8,16 +8,18 @@ import (
 	"tlab/src/domain/sharedkernel/logger"
 	"tlab/src/domain/sharedkernel/unitofwork"
 	"tlab/src/domain/user"
+	"tlab/src/domain/wallet"
 	"tlab/src/infrastructure/http/dto"
 
 	"github.com/google/uuid"
 )
 
 type User struct {
-	uow      unitofwork.UnitOfWork
-	jwt      jwt.JWT
-	logger   logger.Logger
-	userRepo user.UserRepository
+	uow        unitofwork.UnitOfWork
+	jwt        jwt.JWT
+	logger     logger.Logger
+	userRepo   user.UserRepository
+	walletRepo wallet.WalletRepository
 }
 
 func NewUser(
@@ -25,17 +27,37 @@ func NewUser(
 	jwt jwt.JWT,
 	logger logger.Logger,
 	userRepo user.UserRepository,
-
+	walletRepo wallet.WalletRepository,
 ) *User {
 	return &User{
-		uow:      uow,
-		jwt:      jwt,
-		logger:   logger,
-		userRepo: userRepo,
+		uow:        uow,
+		jwt:        jwt,
+		logger:     logger,
+		userRepo:   userRepo,
+		walletRepo: walletRepo,
 	}
 }
 
-func (a *User) Login(ctx context.Context, payload dto.LoginInput) (*user.JWTToken, error) {
+func (a *User) GetProfile(ctx context.Context) (*dto.ProfileResponse, error) {
+	var (
+		userId = user.UserId(ctx.Value("user_id").(string))
+	)
+
+	user, err := userId.GetUser(ctx, a.userRepo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.ProfileResponse{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}, nil
+}
+
+func (a *User) Login(ctx context.Context, payload dto.LoginInput) (*dto.JWTToken, error) {
 	creds := user.LoginInput{
 		Email:    payload.Email,
 		Password: payload.Password,
@@ -60,7 +82,10 @@ func (a *User) Login(ctx context.Context, payload dto.LoginInput) (*user.JWTToke
 		return nil, err
 	}
 
-	return token, nil
+	return &dto.JWTToken{
+		AccessToken:  token.AccessToken,
+		RefreshToken: "",
+	}, nil
 }
 
 func (a *User) Register(ctx context.Context, payload dto.RegisterInput) error {
@@ -69,13 +94,20 @@ func (a *User) Register(ctx context.Context, payload dto.RegisterInput) error {
 		return err
 	}
 
+	walletId, err := uuid.NewUUID()
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+
 	user := &user.User{
-		ID:        userId,
+		ID:        userId.String(),
 		Name:      payload.Name,
 		Email:     payload.Email,
 		Password:  payload.Password,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 
 	salt, err := user.GenerateSalt()
@@ -90,5 +122,30 @@ func (a *User) Register(ctx context.Context, payload dto.RegisterInput) error {
 		return err
 	}
 
-	return user.NewUser(ctx, a.userRepo)
+	newWallet := wallet.Wallet{
+		Id:        walletId.String(),
+		UserID:    userId.String(),
+		Amount:    0,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	_, err = a.uow.Execute(ctx, func(ctx context.Context) (result *unitofwork.Result, err error) {
+		err = newWallet.CreateNewWallet(ctx, a.walletRepo)
+		if err != nil {
+			return nil, err
+		}
+
+		err = user.NewUser(ctx, a.userRepo)
+		if err != nil {
+			return nil, err
+		}
+		return &unitofwork.Result{}, err
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

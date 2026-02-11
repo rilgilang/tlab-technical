@@ -11,11 +11,11 @@ import (
 	"tlab/src/infrastructure/http/middleware"
 )
 
-func Transfer(c echo.Context) error {
+func TopUpBalance(c echo.Context) error {
 	var (
 		ctn       = c.Get(container.ContainerDefName).(di.Container)
 		walletApp = ctn.Get(container.WalletApplicationDefName).(*application.Wallet)
-		input     = dto.Transfer{}
+		input     = dto.TopUp{}
 		ctx       = context.Background()
 		userId    = c.Get("user_id")
 	)
@@ -29,16 +29,17 @@ func Transfer(c echo.Context) error {
 		return response.ValidationError(c, err)
 	}
 
-	result, err := walletApp.Transfer(ctx, input)
+	result, err := walletApp.TopUpBalance(ctx, input)
 	if err != nil {
 		return response.Error(c, 500, "internal server error", nil)
 	}
 
-	return response.Ok(c, "successfully transfer", result)
+	//return response.Ok(c, "successfully charge", trx)
+	return response.Ok(c, "successfully top up balance", result)
 
 }
 
-func TransactionHistory(c echo.Context) error {
+func GetBalance(c echo.Context) error {
 	var (
 		ctn       = c.Get(container.ContainerDefName).(di.Container)
 		walletApp = ctn.Get(container.WalletApplicationDefName).(*application.Wallet)
@@ -48,20 +49,22 @@ func TransactionHistory(c echo.Context) error {
 
 	ctx = context.WithValue(ctx, "user_id", userId)
 
-	result, err := walletApp.GetTransactionHistory(ctx)
+	result, err := walletApp.GetBalance(ctx)
 	if err != nil {
 		return response.Error(c, 500, "internal server error", nil)
 	}
 
-	return response.Ok(c, "successfully transfer", result)
+	//return response.Ok(c, "successfully charge", trx)
+	return response.Ok(c, "successfully get balance", result)
+
 }
 
-func TransactionRoutes(api *echo.Group, ctn *di.Container) *echo.Group {
+func WalletRoutes(api *echo.Group, ctn *di.Container) *echo.Group {
 
-	trx := api.Group("/transaction")
-	trx.Use(middleware.AuthenticationMiddleware)
-	trx.POST("/transfer", Transfer)
-	trx.GET("/history", TransactionHistory)
+	wallet := api.Group("/wallet")
+	wallet.Use(middleware.AuthenticationMiddleware)
+	wallet.POST("/topup", TopUpBalance)
+	wallet.GET("/balance", GetBalance)
 
-	return trx
+	return wallet
 }
