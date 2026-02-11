@@ -95,4 +95,3 @@ Most endpoints require Bearer token authentication. The token is automatically c
 ## Endpoints
 ---
 You can check list of endpoint on the Postman
-https://dsi-aicare-marketplace.postman.co/workspace/My-Workspace~c2d2de3d-2007-443f-81d2-b45e28972599/collection/31714573-155a48d5-079b-42d9-b015-66a073682ebd?action=share&creator=31714573&active-environment=31714573-521dacd5-27bd-48b2-a366-03bab710da3e
