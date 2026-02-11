@@ -85,4 +85,4 @@ This directory contains the operational behavior of the domain. This directory i
 
 ## Endpoints
 ---
-You can check list of endpoint on the [Postman]([https://blue-moon-221631.postman.co/workspace/My-Workspace~7ab23d94-3d8d-46f2-8be3-c4f74dcf0d25/collection/29535426-6aa0b350-f8e9-49a7-8ef8-4b0bf104797b?action=share&creator=29535426](https://github.com/rilgilang/tlab-technical)) 
+You can check list of endpoint on the [Postman](https://blue-moon-221631.postman.co/workspace/My-Workspace~7ab23d94-3d8d-46f2-8be3-c4f74dcf0d25/collection/29535426-6aa0b350-f8e9-49a7-8ef8-4b0bf104797b?action=share&creator=29535426](https://github.com/rilgilang/tlab-technical) 
