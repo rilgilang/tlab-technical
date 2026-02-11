@@ -31,7 +31,7 @@ func Transfer(c echo.Context) error {
 
 	result, err := walletApp.Transfer(ctx, input)
 	if err != nil {
-		return response.Error(c, 500, "internal server error", nil)
+		return response.DisplayCustomError(c, err)
 	}
 
 	return response.Ok(c, "successfully transfer", result)
@@ -50,7 +50,7 @@ func TransactionHistory(c echo.Context) error {
 
 	result, err := walletApp.GetTransactionHistory(ctx)
 	if err != nil {
-		return response.Error(c, 500, "internal server error", nil)
+		return response.DisplayCustomError(c, err)
 	}
 
 	return response.Ok(c, "successfully transfer", result)

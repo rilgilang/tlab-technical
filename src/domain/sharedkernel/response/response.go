@@ -2,6 +2,7 @@ package response
 
 import (
 	"net/http"
+	mapper "tlab/src/infrastructure/http/error"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -35,20 +36,16 @@ func Error(c echo.Context, code int, message string, err error) error {
 	return c.JSON(code, response)
 }
 
+func DisplayCustomError(c echo.Context, err error) error {
+	e := mapper.ErrorMap[err]
+	return c.JSON(e.Code, Response{
+		Status:  e.Status,
+		Message: e.Message,
+	})
+}
+
 func BadRequest(c echo.Context, message string, err error) error {
 	return Error(c, http.StatusBadRequest, message, err)
-}
-
-func Created(c echo.Context, message string, data any) error {
-	return Success(c, http.StatusCreated, message, data)
-}
-
-func Unauthorized(c echo.Context, message string, err error) error {
-	return Error(c, http.StatusUnauthorized, message, err)
-}
-
-func Forbidden(c echo.Context, message string, err error) error {
-	return Error(c, http.StatusForbidden, message, err)
 }
 
 func Ok(c echo.Context, message string, data any) error {

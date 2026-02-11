@@ -31,7 +31,7 @@ func TopUpBalance(c echo.Context) error {
 
 	result, err := walletApp.TopUpBalance(ctx, input)
 	if err != nil {
-		return response.Error(c, 500, "internal server error", nil)
+		return response.DisplayCustomError(c, err)
 	}
 
 	//return response.Ok(c, "successfully charge", trx)
@@ -51,7 +51,7 @@ func GetBalance(c echo.Context) error {
 
 	result, err := walletApp.GetBalance(ctx)
 	if err != nil {
-		return response.Error(c, 500, "internal server error", nil)
+		return response.DisplayCustomError(c, err)
 	}
 
 	//return response.Ok(c, "successfully charge", trx)

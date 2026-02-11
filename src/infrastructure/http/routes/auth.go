@@ -27,7 +27,7 @@ func Login(c echo.Context) error {
 
 	token, err := userApp.Login(ctx, input)
 	if err != nil {
-		return response.Error(c, 500, "internal server error", nil)
+		return response.DisplayCustomError(c, err)
 	}
 
 	return response.Ok(c, "successfully login", token)
@@ -51,7 +51,7 @@ func Register(c echo.Context) error {
 
 	err := userApp.Register(ctx, input)
 	if err != nil {
-		return response.Error(c, 500, "internal server error", nil)
+		return response.DisplayCustomError(c, err)
 	}
 
 	return response.Ok(c, "successfully register", nil)

@@ -21,7 +21,7 @@ func Profile(c echo.Context) error {
 	ctx = context.WithValue(ctx, "user_id", userId)
 	profile, err := userApp.GetProfile(ctx)
 	if err != nil {
-		return response.Error(c, 500, "internal server error", nil)
+		return response.DisplayCustomError(c, err)
 	}
 
 	return response.Ok(c, "successfully get profile", profile)
